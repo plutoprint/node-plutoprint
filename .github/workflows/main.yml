@@ -6,6 +6,7 @@ env:
   PLUTOBOOK_VERSION: 0.11.3
 jobs:
   build-linux:
+    if: github.ref_type == 'tag' || contains(github.event.head_commit.message, '[build:addon]')
     runs-on: ubuntu-latest
     container:
       image: node:20-bullseye
@@ -100,13 +101,13 @@ jobs:
           node -e "console.log(require('./index').plutobookBuildInfo)"
 
   build-windows:
+    if: github.ref_type == 'tag' || contains(github.event.head_commit.message, '[build:addon]')
     runs-on: windows-latest
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-node@v6
         with:
           node-version: 20
@@ -154,10 +155,10 @@ jobs:
           node -e "console.log(require('./index').plutobookBuildInfo)"
 
   build-macos:
+    if: github.ref_type == 'tag' || contains(github.event.head_commit.message, '[build:addon]')
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-node@v6
         with:
           node-version: 20
@@ -176,17 +177,25 @@ jobs:
         run: |
           node -e "console.log(require('./index').plutobookBuildInfo)"
 
-  release:
+  publish:
     needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
 
-      - name: Download artifacts
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Download tarballs
         uses: actions/download-artifact@v4
         with:
           pattern: plutoprint-*
