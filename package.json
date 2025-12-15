@@ -1,0 +1,39 @@
+{
+  "name": "plutoprint",
+  "version": "0.0.16",
+  "description": "Paged HTML rendering library",
+  "keywords": ["html", "css", "svg", "pdf", "png", "html2pdf", "html2png"],
+  "homepage": "https://github.com/plutoprint/node-plutoprint#readme",
+  "bugs": {
+    "url": "https://github.com/plutoprint/node-plutoprint/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plutoprint/node-plutoprint.git"
+  },
+  "funding": {
+    "url": "https://github.com/sponsors/plutoprint"
+  },
+  "license": "MIT",
+  "author": "Samuel Ugochukwu <sammycageagle@gmail.com>",
+  "types": "index.d.ts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "prebuild-install -r napi || node-gyp rebuild",
+    "tsd": "tsd"
+  },
+  "dependencies": {
+    "prebuild-install": "^7.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "tsd": "^0.33.0"
+  },
+  "gypfile": true,
+  "binary": {
+    "napi_versions": [
+      7
+    ]
+  }
+}

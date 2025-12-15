@@ -1,0 +1,199 @@
+name: Build and Publish
+
+on: [push, pull_request]
+
+env:
+  PLUTOBOOK_VERSION: 0.11.3
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    container:
+      image: node:20-bullseye
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Checkout PlutoBook
+        uses: actions/checkout@v5
+        with:
+          repository: 'plutoprint/plutobook'
+          ref: 'v${{ env.PLUTOBOOK_VERSION }}'
+          path: 'plutobook'
+
+      - name: Install PlutoBook dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            libicu-dev \
+            libcurl4-gnutls-dev \
+            libturbojpeg0-dev \
+            libwebp-dev \
+            bzip2 \
+            brotli \
+            gperf \
+            python3 \
+            python3-pip
+
+      - name: Build PlutoBook
+        run: |
+          pip install --upgrade pip meson ninja
+          meson setup plutobook plutobook/build --buildtype=release --prefix=/usr \
+            --force-fallback-for=cairo,freetype2,fontconfig,harfbuzz
+          meson compile -C plutobook/build
+          meson install -C plutobook/build --strip
+
+      - name: Build addon
+        run: |
+          npm install -g node-gyp
+          node-gyp rebuild
+
+      - name: Generate tarball filename
+        id: tarball-filename
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            return `plutoprint-${process.env.GITHUB_REF_NAME}-napi-v7-${process.platform}-${process.arch}.tar.gz`;
+
+      - name: Create tarball
+        run: |
+          apt-get install -y patchelf pax-utils
+
+          libraries=$(lddtree -l build/Release/plutoprint.node \
+            | grep -v "plutoprint.node$" \
+            | grep -v -e 'libgcc_s.so.1' \
+                      -e 'libresolv.so.2' \
+                      -e 'libpthread.so.0' \
+                      -e 'libm.so.6' \
+                      -e 'libdl.so.2' \
+                      -e 'libexpat.so.1' \
+                      -e 'libc.so.6' \
+                      -e 'librt.so.1' \
+                      -e 'libz.so.1' \
+                      -e 'ld-linux-x86-64.so.2' \
+                      -e 'libstdc++.so.6')
+
+          for lib in $libraries; do
+            cp -v $lib build/Release/
+            patchelf --set-rpath '$ORIGIN' build/Release/$(basename $lib)
+            strip --strip-unneeded build/Release/$(basename $lib)
+          done
+
+          patchelf --set-rpath '$ORIGIN' build/Release/plutoprint.node
+          strip --strip-unneeded build/Release/plutoprint.node
+
+          rm -r build/Release/.deps
+          rm -r build/Release/obj.target
+
+          tar -czvf "${{ steps.tarball-filename.outputs.result }}" build
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: plutoprint-linux-tarball
+          path: ${{ steps.tarball-filename.outputs.result }}
+
+      - name: Test addon
+        run: |
+          node -e "console.log(require('./index').plutobookBuildInfo)"
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install PlutoBook
+        run: |
+          curl -L https://github.com/plutoprint/plutobook/releases/download/v${{ env.PLUTOBOOK_VERSION }}/plutobook-win64-${{ env.PLUTOBOOK_VERSION }}.zip -o plutobook-win64.zip
+          7z x plutobook-win64.zip
+
+      - name: Build addon
+        run: |
+          export PLUTOBOOK_INC='${{ github.workspace }}\plutobook-win64\include\plutobook'
+          export PLUTOBOOK_LIB='${{ github.workspace }}\plutobook-win64\lib\libplutobook.dll.a'
+          npm install -g node-gyp
+          node-gyp rebuild
+
+      - name: Generate tarball filename
+        id: tarball-filename
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            return `plutoprint-${process.env.GITHUB_REF_NAME}-napi-v7-${process.platform}-${process.arch}.tar.gz`;
+
+      - name: Create tarball
+        run: |
+          rm -r build/Release/obj
+          rm -r build/Release/plutoprint.exp
+          rm -r build/Release/plutoprint.iobj
+          rm -r build/Release/plutoprint.ipdb
+          rm -r build/Release/plutoprint.lib
+          rm -r build/Release/plutoprint.pdb
+          cp -r plutobook-win64/bin/fonts build/Release/fonts
+          cp -v '${{ github.workspace }}\plutobook-win64\bin\libplutobook-0.dll' build/Release
+          tar -czvf "${{ steps.tarball-filename.outputs.result }}" build
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: plutoprint-windows-tarball
+          path: ${{ steps.tarball-filename.outputs.result }}
+
+      - name: Test addon
+        run: |
+          node -e "console.log(require('./index').plutobookBuildInfo)"
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install PlutoBook
+        run: |
+          brew update
+          brew install plutobook
+
+      - name: Build addon
+        run: |
+          npm install -g node-gyp
+          node-gyp rebuild
+
+      - name: Test addon
+        run: |
+          node -e "console.log(require('./index').plutobookBuildInfo)"
+
+  release:
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: plutoprint-*
+          merge-multiple: true
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: plutoprint-*.tar.gz
