@@ -8,10 +8,10 @@
 
 #include <plutobook.h>
 
-static bool get_callback_info(napi_env env, napi_callback_info info, size_t* argc, napi_value* argv, napi_value* thisArg, void** data, size_t required, size_t optional)
+static bool get_callback_info(napi_env env, napi_callback_info info, size_t* argc, napi_value* argv, napi_value* thisArg, size_t required, size_t optional)
 {
     size_t provided = required + optional;
-    napi_get_cb_info(env, info, &provided, argv, thisArg, data);
+    napi_get_cb_info(env, info, &provided, argv, thisArg, NULL);
 
     size_t expected = required + optional;
     if(expected == 0 && provided > 0) {
@@ -307,7 +307,7 @@ static napi_value CreateBook(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
     napi_value argv[1];
-    if(!get_callback_info(env, info, &argc, argv, NULL, NULL, 0, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, NULL, 0, 1)) {
         return NULL;
     }
 
@@ -343,7 +343,7 @@ static napi_value BookClass_Constructor(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value argv[1];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 0, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 0, 1)) {
         return NULL;
     }
 
@@ -444,7 +444,7 @@ cleanup:
 static napi_value Book_PageCount(napi_env env, napi_callback_info info)
 {
     napi_value thisArg;
-    if(!get_callback_info(env, info, NULL, NULL, &thisArg, NULL, 0, 0)) {
+    if(!get_callback_info(env, info, NULL, NULL, &thisArg, 0, 0)) {
         return NULL;
     }
 
@@ -459,7 +459,7 @@ static napi_value Book_PageCount(napi_env env, napi_callback_info info)
 static napi_value Book_DocumentWidth(napi_env env, napi_callback_info info)
 {
     napi_value thisArg;
-    if(!get_callback_info(env, info, NULL, NULL, &thisArg, NULL, 0, 0)) {
+    if(!get_callback_info(env, info, NULL, NULL, &thisArg, 0, 0)) {
         return NULL;
     }
 
@@ -474,7 +474,7 @@ static napi_value Book_DocumentWidth(napi_env env, napi_callback_info info)
 static napi_value Book_DocumentHeight(napi_env env, napi_callback_info info)
 {
     napi_value thisArg;
-    if(!get_callback_info(env, info, NULL, NULL, &thisArg, NULL, 0, 0)) {
+    if(!get_callback_info(env, info, NULL, NULL, &thisArg, 0, 0)) {
         return NULL;
     }
 
@@ -489,7 +489,7 @@ static napi_value Book_DocumentHeight(napi_env env, napi_callback_info info)
 static napi_value Book_ViewportWidth(napi_env env, napi_callback_info info)
 {
     napi_value thisArg;
-    if(!get_callback_info(env, info, NULL, NULL, &thisArg, NULL, 0, 0)) {
+    if(!get_callback_info(env, info, NULL, NULL, &thisArg, 0, 0)) {
         return NULL;
     }
 
@@ -504,7 +504,7 @@ static napi_value Book_ViewportWidth(napi_env env, napi_callback_info info)
 static napi_value Book_ViewportHeight(napi_env env, napi_callback_info info)
 {
     napi_value thisArg;
-    if(!get_callback_info(env, info, NULL, NULL, &thisArg, NULL, 0, 0)) {
+    if(!get_callback_info(env, info, NULL, NULL, &thisArg, 0, 0)) {
         return NULL;
     }
 
@@ -521,7 +521,7 @@ static napi_value Book_LoadUrl(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value argv[2];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 1, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 1, 1)) {
         return NULL;
     }
 
@@ -569,7 +569,7 @@ static napi_value Book_LoadHtml(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value argv[2];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 1, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 1, 1)) {
         return NULL;
     }
 
@@ -620,7 +620,7 @@ static napi_value Book_LoadXml(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value argv[2];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 1, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 1, 1)) {
         return NULL;
     }
 
@@ -686,7 +686,7 @@ static napi_value Book_LoadData(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value argv[2];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 1, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 1, 1)) {
         return NULL;
     }
 
@@ -746,7 +746,7 @@ static napi_value Book_LoadImage(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value argv[2];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 1, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 1, 1)) {
         return NULL;
     }
 
@@ -806,7 +806,7 @@ static napi_value Book_WriteToPdf(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value argv[2];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 1, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 1, 1)) {
         return NULL;
     }
 
@@ -894,7 +894,7 @@ static napi_value Book_WriteToPdfBuffer(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value argv[1];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 0, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 0, 1)) {
         return NULL;
     }
 
@@ -939,7 +939,7 @@ static napi_value Book_WriteToPng(napi_env env, napi_callback_info info)
     size_t argc = 2;
     napi_value argv[2];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 1, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 1, 1)) {
         return NULL;
     }
 
@@ -984,7 +984,7 @@ static napi_value Book_WriteToPngBuffer(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value argv[1];
     napi_value thisArg;
-    if(!get_callback_info(env, info, &argc, argv, &thisArg, NULL, 0, 1)) {
+    if(!get_callback_info(env, info, &argc, argv, &thisArg, 0, 1)) {
         return NULL;
     }
 
