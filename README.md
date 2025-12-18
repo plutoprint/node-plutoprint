@@ -83,11 +83,11 @@ book.writeToPdf('hello-reverse.pdf', { pageStart: 15, pageEnd: 2, pageStep: -1 }
 
 // Export the entire document to a PDF buffer
 const allPagesBuffer = book.writeToPdfBuffer();
+console.log(`Generated entire document PDF buffer: ${allPagesBuffer.length} bytes`);
 
 // Export only page 1 to a PDF buffer
 const pageOneBuffer = book.writeToPdfBuffer({ pageStart: 1, pageEnd: 1 });
-
-console.log('PDF buffers generated:', allPagesBuffer.length, pageOneBuffer.length);
+console.log(`Generated page 1 PDF buffer: ${pageOneBuffer.length} bytes`);
 ```
 
 ### Generating PNG
