@@ -155,7 +155,6 @@ jobs:
           node -e "console.log(require('./index').plutobookBuildInfo)"
 
   build-macos:
-    if: github.ref_type == 'tag' || contains(github.event.head_commit.message, '[build:addon]')
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
