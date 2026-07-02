@@ -20,7 +20,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: 'plutoprint/plutobook'
-          ref: 'v${{ env.PLUTOBOOK_VERSION }}'
+          ref: 1c3bf6c3c97eaadb097d362d321b2e11d37204cf
+          # ref: 'v${{ env.PLUTOBOOK_VERSION }}'
           path: 'plutobook'
 
       - name: Install PlutoBook dependencies
