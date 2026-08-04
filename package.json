@@ -1,6 +1,6 @@
 {
   "name": "plutoprint",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "Paged HTML rendering library",
   "keywords": ["html", "css", "svg", "pdf", "png", "html2pdf", "html2png"],
   "homepage": "https://github.com/plutoprint/node-plutoprint#readme",
