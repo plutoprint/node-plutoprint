@@ -148,7 +148,7 @@ static bool media_option_func(napi_env env, napi_value property, const char* nam
     char* value;
     if(!string_option_func(env, property, name, &value))
         return false;
-    struct {
+    const struct {
         const char* name;
         plutobook_media_type_t value;
     } table[] = {
@@ -177,7 +177,7 @@ static bool size_option_func(napi_env env, napi_value property, const char* name
     char* value;
     if(!string_option_func(env, property, name, &value))
         return false;
-    struct {
+    const struct {
         const char* name;
         plutobook_page_size_t value;
     } table[] = {
@@ -226,7 +226,7 @@ static bool length_option_func(napi_env env, napi_value property, const char* na
 
     char* end;
     double length = strtod(value, &end);
-    static const struct {
+    const struct {
         const char* name;
         const double factor;
     } table[] = {
@@ -301,8 +301,6 @@ static bool parse_options(napi_env env, napi_value* argv, size_t argc, size_t ar
     return true;
 }
 
-static napi_ref BookClass_Ref;
-
 static napi_value CreateBook(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
@@ -310,6 +308,9 @@ static napi_value CreateBook(napi_env env, napi_callback_info info)
     if(!get_callback_info(env, info, &argc, argv, NULL, 0, 1)) {
         return NULL;
     }
+
+    napi_ref BookClass_Ref;
+    napi_get_instance_data(env, (void**)&BookClass_Ref);
 
     napi_value BookClass;
     napi_get_reference_value(env, BookClass_Ref, &BookClass);
@@ -609,6 +610,7 @@ static napi_value Book_LoadHtml(napi_env env, napi_callback_info info)
     }
 
 cleanup:
+    free(content);
     free(userStyle);
     free(userScript);
     free(baseUrl);
@@ -660,6 +662,7 @@ static napi_value Book_LoadXml(napi_env env, napi_callback_info info)
     }
 
 cleanup:
+    free(content);
     free(userStyle);
     free(userScript);
     free(baseUrl);
@@ -1022,6 +1025,13 @@ cleanup:
     return result;
 }
 
+static void BookClass_Ref_Finalize(napi_env env, void* data, void* hint)
+{
+    if(data) {
+        napi_delete_reference(env, data);
+    }
+}
+
 static void BookClass_Init(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -1044,8 +1054,11 @@ static void BookClass_Init(napi_env env, napi_value exports)
     size_t property_count = sizeof(properties) / sizeof(napi_property_descriptor);
 
     napi_value BookClass;
+    napi_ref BookClass_Ref;
+
     napi_define_class(env, "Book", NAPI_AUTO_LENGTH, BookClass_Constructor, NULL, property_count, properties, &BookClass);
     napi_create_reference(env, BookClass, 1, &BookClass_Ref);
+    napi_set_instance_data(env, BookClass_Ref, BookClass_Ref_Finalize, NULL);
     napi_set_named_property(env, exports, "Book", BookClass);
 }
 
